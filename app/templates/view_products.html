@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}상품 목록{% endblock %}
+
+{% block content %}
+<h1 style="text-align: center;">상품 목록</h1>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>상품명</th>
+        <th>필수 특징</th>
+        <th>보조 특징</th>
+    </tr>
+    {% for product in products %}
+    <tr>
+        <td>{{ product.id }}</td>
+        <td>{{ product.name }}</td>
+        <td>{{ product.required_features | replace("\n", "<br>")|safe }}</td>
+        <td>{{ product.optional_features | replace("\n", "<br>")|safe }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<div class="pagination">
+    {% if skip > 0 %}
+    <button onclick="window.location.href='/products/view?page={{ skip - 1 }}&limit={{ limit }}'">이전</button>
+    {% endif %}
+    {% if (skip + 1) * limit < total_count %}
+    <button onclick="window.location.href='/products/view?page={{ skip + 1 }}&limit={{ limit }}'">다음</button>
+    {% endif %}
+</div>
+{% endblock %}

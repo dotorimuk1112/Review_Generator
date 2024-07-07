@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}상품 등록{% endblock %}
+
+{% block content %}
+<h1 style="text-align: center;">상품 등록</h1>
+<form id="product-form">
+    <label for="name">상품명:</label>
+    <input type="text" id="name" name="name" required><br><br>
+    <label for="required_features">필수 특징:</label>
+    <textarea id="required_features" name="required_features" required></textarea><br><br>
+    <label for="optional_features">보조 특징:</label>
+    <textarea id="optional_features" name="optional_features"></textarea><br><br>
+    <button type="submit" style="width: 100%;">등록</button>
+</form>
+
+<script>
+    document.getElementById('product-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const name = document.getElementById('name').value;
+        const required_features = document.getElementById('required_features').value;
+        const optional_features = document.getElementById('optional_features').value;
+
+        const response = await fetch('/products/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, required_features, optional_features })
+        });
+
+        if (response.ok) {
+            alert('상품이 등록되었습니다!');
+        } else {
+            const error = await response.json();
+            alert(`상품 등록에 실패했습니다: ${error.detail}`);
+        }
+    });
+</script>
+{% endblock %}

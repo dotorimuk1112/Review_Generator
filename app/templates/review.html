@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}리뷰 생성{% endblock %}
+
+{% block content %}
+<h1 style="text-align: center;">리뷰 생성하기</h1>
+<form id="review-form">
+    <!-- 필수 옵션 -->
+    <h3 style="text-align: center;">필수 옵션</h3>
+    <label for="product_id">상품 ID:</label>
+    <input type="number" id="product_id" name="product_id" placeholder="상품 ID는 <상품 목록> 메뉴를 확인 바랍니다." required><br><br>
+    <label for="review_count">리뷰 개수:</label>
+    <input type="number" id="review_count" name="review_count" placeholder="AI가 생성할 총 리뷰의 개수입니다." required><br><br>
+    <label for="min_number_of_sentence">최소 문장수:</label>
+    <input type="number" id="min_number_of_sentence" name="min_number_of_sentence" placeholder="한 개 리뷰 당 최소로 요구되는 문장 수입니다.(2 이상 권장)" required><br><br>
+    <label for="max_number_of_sentence">최대 문장수:</label>
+    <input type="number" id="max_number_of_sentence" name="max_number_of_sentence" placeholder="한 개 리뷰 당 최대로 요구되는 문장 수입니다.(10 이하 권장)" required><br><br>
+    <hr>
+    <!-- 추가 옵션 -->
+    <h3 style="text-align: center;">추가 옵션</h3>
+    <label for="way_of_speaking">연령대</label>
+    <select id="way_of_speaking" name="way_of_speaking">
+        <option value="" disabled selected>연령대를 선택하세요.</option>
+        <option value="M_teenager">10대 남성</option>
+        <option value="F_teenager">10대 여성</option>
+        <option value="M_twenties">20대 남성</option>
+        <option value="F_twenties">20대 여성</option>
+        <option value="M_thirties">30대 남성</option>
+        <option value="F_thirties">30대 여성</option>
+        <option value="M_fourties">40대 남성</option>
+        <option value="F_fourties">40대 여성</option>
+        <option value="M_fifties">50대 남성</option>
+        <option value="F_fifties">50대 여성</option>
+        <!-- 필요에 따라 더 많은 카테고리를 추가할 수 있습니다 -->
+    </select><br><br>
+    <label for="exception_words">예외 단어:</label>
+    <input type="text" id="exception_words" name="exception_words" placeholder="리뷰에 포함시키지 않을 단어입니다. 쉼표로 구분하여 여러 개를 입력할 수 있습니다."><br><br>
+    <button type="submit">생성</button>
+</form>
+
+<div id="loading" style="display: none;">리뷰를 생성하는 중입니다...</div>
+
+<script>
+    document.getElementById('review-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const product_id = document.getElementById('product_id').value;
+        const review_count = document.getElementById('review_count').value;
+        const min_number_of_sentence = document.getElementById('min_number_of_sentence').value;
+        const max_number_of_sentence = document.getElementById('max_number_of_sentence').value;
+        const way_of_speaking_select = document.getElementById('way_of_speaking');
+        const way_of_speaking = way_of_speaking_select.options[way_of_speaking_select.selectedIndex].value;
+        const exception_words = document.getElementById('exception_words').value;
+
+        // 로딩 메시지 표시
+        document.getElementById('loading').style.display = 'block';
+
+        try {
+            const payload = { product_id, review_count, min_number_of_sentence, max_number_of_sentence };
+            if (way_of_speaking) {
+                payload.way_of_speaking = way_of_speaking;
+            }
+            if (exception_words) {
+                payload.exception_words = exception_words;
+            }
+
+            const response = await fetch('/reviews/download', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+
+                // 현재 날짜와 시간을 기반으로 파일명 생성
+                const date = new Date();
+                const year = date.getFullYear().toString().slice(2);
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                const seconds = date.getSeconds().toString().padStart(2, '0');
+                const fileName = `reviews_${year}${month}${day}_${hours}${minutes}${seconds}.csv`;
+
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            } else {
+                alert('리뷰 생성에 실패했습니다.');
+            }
+        } catch (error) {
+            alert('에러가 발생했습니다.');
+        } finally {
+            // 로딩 메시지 숨기기
+            document.getElementById('loading').style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}
